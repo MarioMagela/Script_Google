@@ -1,0 +1,47 @@
+function extractDriveFolderDetails() {
+  // O ID da pasta principal que deseja extrair as informações
+  var folderId = '1Ah0B4enKXLwLrc209O0IUiYbaVwwAHQY';
+  
+  // Obtém o objeto da pasta usando o ID
+  var folder = DriveApp.getFolderById(folderId);
+
+  // Cria uma nova planilha no Google Drive
+  var spreadsheet = SpreadsheetApp.create('Detalhes das Pastas e Arquivos');
+  var sheet = spreadsheet.getActiveSheet();
+
+  // Define os cabeçalhos da planilha
+  sheet.appendRow(["Nome da Pasta/Subpasta", "Nome do Arquivo", "Link para o Arquivo", "Extensão do Arquivo", "Data de Criação", "Data de Modificação", "ID do Arquivo"]);
+
+  // Inicia a extração de detalhes da pasta principal, passando a planilha como parâmetro
+  extractFolderDetails(folder, "", sheet);
+
+  // Exibe o URL da planilha criada no log
+  Logger.log("Planilha criada: " + spreadsheet.getUrl());
+}
+
+function extractFolderDetails(folder, parentPath, sheet) {
+  var folderName = parentPath ? parentPath + '/' + folder.getName() : folder.getName();
+
+  // Obtém todos os arquivos da pasta atual
+  var files = folder.getFiles();
+  while (files.hasNext()) {
+    var file = files.next();
+    var fileName = file.getName();
+    var fileLink = file.getUrl();
+    var fileExtension = file.getName().split('.').pop();
+    var fileCreationDate = file.getDateCreated();
+    var fileLastUpdated = file.getLastUpdated();
+    var fileId = file.getId();
+
+    // Adiciona as informações do arquivo na planilha
+    sheet.appendRow([folderName, fileName, fileLink, fileExtension, fileCreationDate, fileLastUpdated, fileId]);
+  }
+
+  // Obtém todas as subpastas da pasta atual
+  var subfolders = folder.getFolders();
+  while (subfolders.hasNext()) {
+    var subfolder = subfolders.next();
+    // Chama a função recursiva para processar a subpasta
+    extractFolderDetails(subfolder, folderName, sheet);
+  }
+}
