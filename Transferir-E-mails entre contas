@@ -1,0 +1,27 @@
+function encaminharEmailsUltimos30DiasLote() {
+  var dias = 30;
+  var destinatario = "destino@gmail.com";
+  var LIMITE_ENVIO = 90; // limite de segurança
+  var contador = 0;
+
+  var dataInicial = new Date();
+  dataInicial.setDate(dataInicial.getDate() - dias);
+  var dataString = Utilities.formatDate(dataInicial, Session.getScriptTimeZone(), "yyyy/MM/dd");
+
+  var threads = GmailApp.search('after:' + dataString);
+
+  for (var i = 0; i < threads.length && contador < LIMITE_ENVIO; i++) {
+    var mensagens = threads[i].getMessages();
+    for (var j = 0; j < mensagens.length && contador < LIMITE_ENVIO; j++) {
+      var msg = mensagens[j];
+      GmailApp.sendEmail(
+        destinatario,
+        "Fwd: " + msg.getSubject(),
+        "Encaminhado de: " + msg.getFrom() + "\nData: " + msg.getDate() + "\n\n" + msg.getPlainBody()
+      );
+      contador++;
+    }
+  }
+
+  Logger.log("Total de e-mails enviados: " + contador);
+}
